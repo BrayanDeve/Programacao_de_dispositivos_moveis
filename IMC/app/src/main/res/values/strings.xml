@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Teste De IMC</string>
+    <string name="app_name" translatable="false">Calculadora de IMC</string>
     <string name="labelSexo">Sexo</string>
     <string name="labelNome">Nome</string>
     <string name="labelPeso">Peso</string>
