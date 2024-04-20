@@ -1,109 +1,71 @@
 package com.example.imc
 
-import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Log
-import android.view.View
-import android.view.accessibility.AccessibilityEvent
-import android.widget.EditText
-import android.widget.Toast
-import com.google.android.material.textfield.TextInputLayout
-import kotlinx.android.synthetic.main.activity_main.*
-import java.text.MessageFormat
+import android.os.Parcel
+import android.os.Parcelable
 
-class MainActivity : AppCompatActivity() {
+class IMC(private var nome: String?, private var peso: Float, private var altura: Float, var imc: Float = 0.0f) : Parcelable {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+    constructor(parcel: Parcel) : this(
+        parcel.readString(),
+        parcel.readFloat(),
+        parcel.readFloat(),
+        parcel.readFloat()
+    )
 
+    // Dentro da classe IMC
+    fun getPeso(): Float {
+        return peso
+    }
+    fun getAltura(): Float {
+        return altura
+    }
 
-        btnCalc.setOnClickListener(View.OnClickListener {
+    constructor(nome: String, peso: Float, altura: Float) : this(nome, peso, altura, 0.0f) {
+        calcularIMC() // Calcule o IMC ao criar uma instância
+    }
 
-           if( validarCamposBasicos()){
-               val name= editNome.text.toString()
-               val peso= editPeso.text.toString().toFloat()
-               val altura= editAltura.text.toString().toFloat()
-               val imc = IMC(name,peso,altura)
-               val intent = Intent(this,ResultadoActivity::class.java)
-               intent.putExtra("value", imc)
-               startActivity(intent)
-           }
+    fun getNome(): String? {
+        return nome
+    }
 
-        })
-        editNome.addTextChangedListener(clearErrorMessage(layoutEditNome))
-        editAltura.addTextChangedListener(clearErrorMessage(layoutEditAltura))
-        editPeso.addTextChangedListener(clearErrorMessage(layoutEditPeso))
+    fun calcular(): String {
+        // Método de cálculo do estado de saúde
+        return when (imc) {
+            in 0.0..16.0 -> "Magreza grave"
+            in 16.0..17.0 -> "Magreza moderada"
+            in 17.0..19.0 -> "Magreza leve"
+            in 19.0..25.0 -> "Saúdavel"
+            in 25.0..30.0 -> "Sobrepeso"
+            in 30.0..35.0 -> "Obsesidade I"
+            in 35.0..40.0 -> "Obsesidade II"
+            else -> "Obsedidade Morbida."
+        }
+    }
 
-        btnCalc.setOnLongClickListener(){
-            Toast.makeText(this,"Clique longo no botão",Toast.LENGTH_LONG).show()
-            true
+    private fun calcularIMC() {
+        // Calcula o IMC com base no peso e altura
+        val alt = altura / 100
+        imc = peso / (alt * alt)
+    }
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(nome)
+        parcel.writeFloat(peso)
+        parcel.writeFloat(altura)
+        parcel.writeFloat(imc)
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<IMC> {
+        override fun createFromParcel(parcel: Parcel): IMC {
+            return IMC(parcel)
         }
 
-    }
-
-
-    private fun exibirMensagemErro(editText: EditText, textViewMessage: TextInputLayout, mensagem: String ) {
-        textViewMessage.error = mensagem
-        editText.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
-        editText.requestFocus();
-    }
-
-    fun exibirMensagemErroNome(){
-        val mensagem = formatarMensagem("Campo")
-        exibirMensagemErro(editNome, layoutEditNome, mensagem)
-    }
-
-    fun exibirMensagemErroPeso(){
-        val mensagem = formatarMensagem("Campo")
-        exibirMensagemErro(editPeso, layoutEditPeso, mensagem)
-    }
-
-    fun exibirMensagemErroAltura(){
-        val mensagem = formatarMensagem("Campo")
-        exibirMensagemErro(editAltura, layoutEditAltura, mensagem)
-    }
-
-    private fun validarCamposBasicos(): Boolean {
-        Log.e("ERRO", editNome.toString()+"dsbhfkjsdhf")
-        clearErrorMessage(layoutEditNome)
-        val tam =editNome.text.toString().length
-        if (isEmpty(editNome.text.toString()) || tam < 3) {
-                exibirMensagemErroNome()
-                return false
-        }
-        clearErrorMessage(layoutEditPeso)
-
-        if (isEmpty(editPeso.text.toString())) {
-            exibirMensagemErroPeso()
-            return false
-        }
-        clearErrorMessage(layoutEditAltura)
-
-        if (isEmpty(editAltura.text.toString())) {
-            exibirMensagemErroAltura()
-            return false
-        }
-        return true
-    }
-
-    private fun isEmpty(valor: String) = valor == ""
-
-    private fun formatarMensagem(campo:String) : String{
-        val message = "Informe o campo"
-        return  MessageFormat.format(message, campo)
-    }
-
-    private fun clearErrorMessage(text:TextInputLayout): TextWatcher {
-        return object : TextWatcher {
-            override fun afterTextChanged(s: Editable) {}
-            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int ) { }
-            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int ) {
-                text.error = ""
-            }
+        override fun newArray(size: Int): Array<IMC?> {
+            return arrayOfNulls(size)
         }
     }
 }
